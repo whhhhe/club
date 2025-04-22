@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace等于mapper接口类的全限定名,这样实现对应 -->
+<mapper namespace="com.jingdianjichi.subject.infra.basic.mapper.PracticeLogDao">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO practice_log (
+        user_id,
+        question_count,
+        correct_count,
+        use_time,
+        is_deleted
+        ) VALUES (
+        #{userId},
+        #{questionCount},
+        #{correctCount},
+        #{useTime},
+        #{isDeleted}
+        )
+    </insert>
+    <select id="getPracticeRankList" resultType="com.jingdianjichi.subject.infra.basic.entity.Rank">
+        SELECT
+        b.nick_name as name,
+        SUM(a.correct_count) AS count,
+        b.avatar
+        FROM
+        practice_log AS a
+        INNER JOIN
+        auth_user AS b ON a.user_id = b.user_name
+        GROUP BY
+        a.user_id,
+        b.nick_name,
+        b.avatar
+        ORDER BY
+        count DESC
+        LIMIT 5;
+    </select>
+    <select id="getWrongSubjectIds" resultType="java.lang.Long">
+        select DISTINCT b.subject_id
+        from practice_log AS a
+        inner join practice_detail_log as b
+        on a.id = b.practice_id
+        where a.user_id = #{userId} and b.is_correct = 0 and a.is_deleted = 0
+
+    </select>
+
+</mapper>

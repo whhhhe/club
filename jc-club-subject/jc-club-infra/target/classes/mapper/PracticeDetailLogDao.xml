@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace等于mapper接口类的全限定名,这样实现对应 -->
+<mapper namespace="com.jingdianjichi.subject.infra.basic.mapper.PracticeDetailLogDao">
+    <insert id="batchInsert">
+        INSERT INTO practice_detail_log (
+        practice_id,
+        subject_id,
+        subject_type,
+        is_correct,
+        is_deleted
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.practiceId}, #{item.subjectId}, #{item.subjectType}, #{item.isCorrect}, #{item.isDeleted})
+        </foreach>
+    </insert>
+
+</mapper>

@@ -1,0 +1,16 @@
+server:
+  port: 4000
+minio:
+  url: http://156.225.29.101:9000
+  accessKey: minioadmin
+  secretKey: minioadmin
+storage:
+  service:
+    type: minio
+spring:
+  mvc:
+  servlet:
+    multipart:
+      max-file-size: 10MB  		# 设置单个文件最大大小为10MB
+      max-request-size: 100MB  	# 设置多个文件大小为100MB
+
