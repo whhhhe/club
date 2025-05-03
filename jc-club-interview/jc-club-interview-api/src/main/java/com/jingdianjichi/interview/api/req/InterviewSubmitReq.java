@@ -32,6 +32,8 @@ public class InterviewSubmitReq implements Serializable {
 
         private Double userScore;
 
+        private String comment;
+
     }
 
 }

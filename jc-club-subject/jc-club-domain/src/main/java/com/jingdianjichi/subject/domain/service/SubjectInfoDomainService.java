@@ -44,5 +44,7 @@ public interface SubjectInfoDomainService {
 
     Integer count(Integer subjectType);
 
+
+    void setDiffAndTag();
 }
 

@@ -12,6 +12,7 @@ import com.jingdianjichi.auth.domain.convert.AuthUserBOConverter;
 import com.jingdianjichi.auth.domain.entity.AuthUserBO;
 import com.jingdianjichi.auth.domain.redis.RedisUtil;
 import com.jingdianjichi.auth.domain.service.AuthUserDomainService;
+import com.jingdianjichi.auth.domain.utils.PasswordUtil;
 import com.jingdianjichi.auth.infra.basic.entity.AuthPermission;
 import com.jingdianjichi.auth.infra.basic.entity.AuthRole;
 import com.jingdianjichi.auth.infra.basic.entity.AuthRolePermission;
@@ -67,6 +68,8 @@ public class AuthUserDomainServiceImpl implements AuthUserDomainService {
 
     private static final String LOGIN_PREFIX = "loginCode";
 
+    private static final String ORIGIN_PASSWORD = "111111";
+
     @Override
     @SneakyThrows
     @Transactional(rollbackFor = Exception.class)
@@ -90,6 +93,7 @@ public class AuthUserDomainServiceImpl implements AuthUserDomainService {
         if (StringUtils.isBlank(authUser.getNickName())) {
             authUser.setNickName("匿名用户");
         }
+        authUser.setPassword(PasswordUtil.encrypt(ORIGIN_PASSWORD));
         authUser.setStatus(AuthUserStatusEnum.OPEN.getCode());
         authUser.setIsDeleted(IsDeletedFlagEnum.UN_DELETED.getCode());
         Integer count = authUserService.insert(authUser);
@@ -134,6 +138,17 @@ public class AuthUserDomainServiceImpl implements AuthUserDomainService {
     }
 
     @Override
+    public Boolean updatePassword(AuthUserBO authUserBO) {
+        AuthUser authUser = AuthUserBOConverter.INSTANCE.convertBOToEntity(authUserBO);
+        AuthUser user = authUserService.queryByUserName(authUser.getUserName());
+        if(user == null || !PasswordUtil.matches(authUserBO.getPassword(), user.getPassword())) return Boolean.FALSE;
+        authUser.setPassword(PasswordUtil.encrypt(authUserBO.getNewPassword()));
+        Integer count = authUserService.updateByUserName(authUser);
+        return count > 0;
+    }
+
+
+    @Override
     public Boolean delete(AuthUserBO authUserBO) {
         AuthUser authUser = new AuthUser();
         authUser.setId(authUserBO.getId());
@@ -161,6 +176,38 @@ public class AuthUserDomainServiceImpl implements AuthUserDomainService {
         SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
         return tokenInfo;
     }
+
+    @Override
+    public SaTokenInfo login(AuthUserBO authUserBO) {
+        AuthUser authUser = authUserService.queryByUserName(authUserBO.getUserName());
+        if(authUser == null || !PasswordUtil.matches(authUserBO.getPassword(), authUser.getPassword())) return null;
+        StpUtil.login(authUser.getUserName());
+        AuthRole authRole = new AuthRole();
+        AuthUserRole authUserRole = authUserRoleService.queryByUserId(authUser.getId());
+        Long role = authUserRole.getRoleId();
+        authRole.setRoleKey(role == 1 ? AuthConstant.ADMIN_USER : AuthConstant.NORMAL_USER);
+        AuthRole roleResult = authRoleService.queryByCondition(authRole);
+        Long roleId = roleResult.getId();
+        String roleKey = redisUtil.buildKey(authRolePrefix, authUser.getUserName());
+        List<AuthRole> roleList = new LinkedList<>();
+        roleList.add(authRole);
+        redisUtil.set(roleKey, new Gson().toJson(roleList));
+
+        AuthRolePermission authRolePermission = new AuthRolePermission();
+        authRolePermission.setRoleId(roleId);
+        List<AuthRolePermission> rolePermissionList = authRolePermissionService.
+                queryByCondition(authRolePermission);
+
+        List<Long> permissionIdList = rolePermissionList.stream()
+                .map(AuthRolePermission::getPermissionId).collect(Collectors.toList());
+        //根据roleId查权限
+        List<AuthPermission> permissionList = authPermissionService.queryByRoleList(permissionIdList);
+        String permissionKey = redisUtil.buildKey(authPermissionPrefix, authUser.getUserName());
+        redisUtil.set(permissionKey, new Gson().toJson(permissionList));
+
+        return StpUtil.getTokenInfo();
+    }
+
 
     @Override
     public AuthUserBO getUserInfo(AuthUserBO authUserBO) {
@@ -197,6 +244,7 @@ public class AuthUserDomainServiceImpl implements AuthUserDomainService {
         if(authUserRole != null) return authUserRole.getRoleId();
         return null;
     }
+
 
     private void setRoleAndPermission(AuthUserBO authUserBo){
 //        AuthRole authRole = new AuthRole();

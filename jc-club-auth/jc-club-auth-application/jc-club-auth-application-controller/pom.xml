@@ -28,7 +28,7 @@
             <artifactId>sa-token-spring-boot-starter</artifactId>
             <version>1.37.0</version>
         </dependency>
-
+        <!-- 如果你使用的是 Spring Security，默认就已包含 -->
         <dependency>
             <groupId>com.jingdianjichi</groupId>
             <artifactId>jc-club-auth-domain</artifactId>

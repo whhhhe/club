@@ -26,6 +26,8 @@ public class AuthUserDTO implements Serializable {
 
     private String password;
 
+    private String newPassword;
+
     private Integer sex;
 
     private String avatar;

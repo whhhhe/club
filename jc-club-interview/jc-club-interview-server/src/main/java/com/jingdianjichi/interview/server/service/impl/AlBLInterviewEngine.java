@@ -101,58 +101,62 @@ public class AlBLInterviewEngine implements InterviewEngine {
         List<InterviewSubmitReq.Submit> submits = req.getQuestionList();
         double total = submits.stream().mapToDouble(InterviewSubmitReq.Submit::getUserScore).sum();
         double avg = submits.isEmpty() ? 0 : total / submits.size();
-//
-//        String avtTips = EvaluateUtils.avgEvaluate(avg);
+
         InterviewResultVO vo = new InterviewResultVO();
         vo.setAvgScore(avg);
-        // 调用大模型生成整体点评
-        try {
-            StringBuilder summaryPrompt = new StringBuilder();
-            summaryPrompt.append("以下是用户的模拟面试题目与作答内容，请你从整体角度评价本次面试表现，主要指出不足之处，简略说一下优点，并提出提升建议，最终输出一段总结文字,字数在100字以内：\n\n");
-
-            for (InterviewSubmitReq.Submit s : interviews) {
-                summaryPrompt.append(String.format("【题目】：%s\n", s.getSubjectName()));
-                summaryPrompt.append(String.format("【回答】：%s\n\n", s.getUserAnswer()));
-            }
-            summaryPrompt.append("请给出整体表现点评：");
-
-            JSONObject jsonData = new JSONObject();
-            jsonData.put("model", "deepseek-r1-distill-llama-70b");
-
-            JSONObject message = new JSONObject();
-            message.put("role", "user");
-            message.put("content", summaryPrompt.toString());
-
-            JSONObject input = new JSONObject();
-            input.put("messages", new JSONObject[]{message});
-            jsonData.put("input", input);
-            jsonData.put("parameters", new JSONObject());
-
-            Map<String, String> headerMap = new HashMap<>();
-            headerMap.put("Authorization", "Bearer " + apiKey);
-            headerMap.put("Content-Type", "application/json");
-
-            String url = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
-            String responseBody = HttpUtils.executePost(url, jsonData.toJSONString(), headerMap);
-
-            String modelEvaluate = "";
-            try {
-                JSONObject resultJson = JSONObject.parseObject(responseBody);
-                JSONObject output = resultJson.getJSONObject("output");
-                JSONArray choices = output.getJSONArray("choices");
-                if (choices != null && !choices.isEmpty()) {
-                    modelEvaluate = choices.getJSONObject(0).getJSONObject("message").getString("content");
-                }
-            } catch (Exception e) {
-                log.error("解析大模型点评失败", e);
-                modelEvaluate = "大模型点评失败，请稍后再试。";
-            }
-
-            vo.setTips(modelEvaluate);
-        } catch (Exception e) {
-            log.error("调用大模型生成点评失败", e);
-            vo.setTips("大模型点评异常，请稍后再试。");
+        int i = 1;
+        for(InterviewSubmitReq.Submit submit : interviews){
+            vo.setTips(vo.getTips() == null ? "" : vo.getTips() + "第" + i++ + "题：" +  submit.getComment() + "; ");
         }
+
+        // 调用大模型生成整体点评
+//        try {
+//            StringBuilder summaryPrompt = new StringBuilder();
+//            summaryPrompt.append("以下是用户的模拟面试题目与作答内容，请你从整体角度评价本次面试表现，主要指出不足之处，简略说一下优点，并提出提升建议，最终输出一段总结文字,字数在100字以内：\n\n");
+//
+//            for (InterviewSubmitReq.Submit s : interviews) {
+//                summaryPrompt.append(String.format("【题目】：%s\n", s.getSubjectName()));
+//                summaryPrompt.append(String.format("【回答】：%s\n\n", s.getUserAnswer()));
+//            }
+//            summaryPrompt.append("请给出整体表现点评：");
+//
+//            JSONObject jsonData = new JSONObject();
+//            jsonData.put("model", "deepseek-r1-distill-llama-70b");
+//
+//            JSONObject message = new JSONObject();
+//            message.put("role", "user");
+//            message.put("content", summaryPrompt.toString());
+//
+//            JSONObject input = new JSONObject();
+//            input.put("messages", new JSONObject[]{message});
+//            jsonData.put("input", input);
+//            jsonData.put("parameters", new JSONObject());
+//
+//            Map<String, String> headerMap = new HashMap<>();
+//            headerMap.put("Authorization", "Bearer " + apiKey);
+//            headerMap.put("Content-Type", "application/json");
+//
+//            String url = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
+//            String responseBody = HttpUtils.executePost(url, jsonData.toJSONString(), headerMap);
+//
+//            String modelEvaluate = "";
+//            try {
+//                JSONObject resultJson = JSONObject.parseObject(responseBody);
+//                JSONObject output = resultJson.getJSONObject("output");
+//                JSONArray choices = output.getJSONArray("choices");
+//                if (choices != null && !choices.isEmpty()) {
+//                    modelEvaluate = choices.getJSONObject(0).getJSONObject("message").getString("content");
+//                }
+//            } catch (Exception e) {
+//                log.error("解析大模型点评失败", e);
+//                modelEvaluate = "大模型点评失败，请稍后再试。";
+//            }
+//
+//            vo.setTips(modelEvaluate);
+//        } catch (Exception e) {
+//            log.error("调用大模型生成点评失败", e);
+//            vo.setTips("大模型点评异常，请稍后再试。");
+//        }
 //        vo.setTips(tips);
 //        vo.setAvgTips(avtTips);
 
@@ -222,11 +226,17 @@ public class AlBLInterviewEngine implements InterviewEngine {
         JSONObject message2 = new JSONObject();
         message2.put("role", "user");
 
-        String keyword = String.format("题目:%s,用户答案:%s", submit.getSubjectName(), submit.getUserAnswer());
+        String keyword = String.format("题目：%s；用户答案：%s", submit.getSubjectName(), submit.getUserAnswer());
         String prompt = String.format(
-                "根据题目和用户答案 %s ;根据用户回答与正确答案的关联度的客观地打一个分数并给出参考答案，打分标准为：0分很差，1分较差，2分一般，3分较好，4分很好，5分完美，请严格打分，并按照数据结构{\"userScore\":\"用户分数\",\"subjectAnswer\":\"参考答案\"}返回JSON数据（只返回JSON）",
-                keyword
+                "请你根据下面的题目和用户作答，从以下三个角度进行处理：\n" +
+                        "1. 客观给出用户的评分，范围为0~5的整数；\n" +
+                        "2. 给出参考答案（可与用户答案不同）；\n" +
+                        "3. 给出一句简明扼要的点评（不超过40字，指出优点或问题）\n" +
+                        "请你直接返回如下JSON格式数据（不要添加多余的解释）：\n" +
+                        "{\"userScore\": 数值, \"subjectAnswer\": \"参考答案内容\", \"comment\": \"一句话点评\"}\n\n" +
+                        "%s", keyword
         );
+
         message2.put("content", prompt);
         input.put("messages", new JSONObject[]{message2});
         jsonData.put("input", input);
@@ -245,8 +255,6 @@ public class AlBLInterviewEngine implements InterviewEngine {
             }
 
             JSONObject json = JSONObject.parseObject(body);
-
-            // ✅ 正确的路径：output → choices[0] → message → content
             JSONObject output = json.getJSONObject("output");
             if (output == null || !output.containsKey("choices")) {
                 throw new RuntimeException("返回体中不包含 output.choices 字段：" + body);
@@ -258,7 +266,6 @@ public class AlBLInterviewEngine implements InterviewEngine {
 
             log.info("deepseek 模型原始 content: {}", content);
 
-            // 提取 JSON 内容
             String jsonStr;
             int jsonStart = content.lastIndexOf("```json");
             int jsonEnd = content.lastIndexOf("```");
@@ -266,7 +273,7 @@ public class AlBLInterviewEngine implements InterviewEngine {
             if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
                 jsonStr = content.substring(jsonStart + 7, jsonEnd).trim();
             } else {
-                jsonStr = content.trim(); // fallback: 直接用文本
+                jsonStr = content.trim();
             }
 
             InterviewSubmitReq.Submit result = JSONObject.parseObject(jsonStr, InterviewSubmitReq.Submit.class);
@@ -282,6 +289,7 @@ public class AlBLInterviewEngine implements InterviewEngine {
             log.error("❌ deepseek 模型评分解析失败，错误信息：{}", e.getMessage(), e);
             submit.setSubjectAnswer("获取解析失败");
             submit.setUserScore(0.0);
+            submit.setComment("点评失败");
             return submit;
         }
     }
@@ -301,7 +309,7 @@ public class AlBLInterviewEngine implements InterviewEngine {
         message.put("role", "user");
 
         String prompt = String.format(
-                "根据以下关键字生成1份标签和面试题（你生成的面试题应该侧重概念性而不是实际场景题，不要涉及应用等问题，" +
+                "根据以下关键字以你最快的速度，不要过多的深度思考地生成1份标签和面试题（你生成的面试题应该侧重概念性而不是实际场景题，不要涉及应用等问题，" +
                         "面试题需要是一个和关键词强相关的一个细分知识点）并按照数据结构{\"labelName\":\"分类名称\",\"subjectName\":\"题目\"}返回JSON数据，" +
                         "不要多返回其他内容，严格按照格式，一次返回一个题目，回答中文。关键词：%s", keyword);
 

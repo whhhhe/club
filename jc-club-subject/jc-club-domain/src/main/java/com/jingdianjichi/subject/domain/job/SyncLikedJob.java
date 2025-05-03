@@ -1,5 +1,6 @@
 package com.jingdianjichi.subject.domain.job;
 
+import com.jingdianjichi.subject.domain.service.SubjectInfoDomainService;
 import com.jingdianjichi.subject.domain.service.SubjectLikedDomainService;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
@@ -32,6 +33,8 @@ public class SyncLikedJob {
     @Resource
     private SubjectLikedDomainService subjectLikedDomainService;
 
+    @Resource
+    private SubjectInfoDomainService subjectInfoDomainService;
     /**
      * 同步点赞数据任务
      */
@@ -42,6 +45,17 @@ public class SyncLikedJob {
             subjectLikedDomainService.syncLiked();
         } catch (Exception e) {
             XxlJobHelper.log("syncLikedJobHandler.error" + e.getMessage());
+        }
+    }
+
+    @XxlJob("setDiffAndTag")
+    public void setDiffAndTag(){
+        System.out.println("start");
+        XxlJobHelper.log("setDiffAndTag.start");
+        try{
+            subjectInfoDomainService.setDiffAndTag();
+        }catch (Exception e){
+            XxlJobHelper.log("setDiffAndTag.error" + e.getMessage());
         }
     }
 

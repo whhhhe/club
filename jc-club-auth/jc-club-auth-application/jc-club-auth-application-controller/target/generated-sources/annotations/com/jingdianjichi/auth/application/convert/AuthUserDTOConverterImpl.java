@@ -8,7 +8,7 @@ import javax.annotation.Generated;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-04-18T10:30:16+0800",
+    date = "2025-05-02T12:22:55+0800",
     comments = "version: 1.4.2.Final, compiler: javac, environment: Java 1.8.0_392 (Amazon.com Inc.)"
 )
 public class AuthUserDTOConverterImpl implements AuthUserDTOConverter {
@@ -27,6 +27,7 @@ public class AuthUserDTOConverterImpl implements AuthUserDTOConverter {
         authUserBO.setEmail( authUserDTO.getEmail() );
         authUserBO.setPhone( authUserDTO.getPhone() );
         authUserBO.setPassword( authUserDTO.getPassword() );
+        authUserBO.setNewPassword( authUserDTO.getNewPassword() );
         authUserBO.setSex( authUserDTO.getSex() );
         authUserBO.setAvatar( authUserDTO.getAvatar() );
         authUserBO.setStatus( authUserDTO.getStatus() );
@@ -50,6 +51,7 @@ public class AuthUserDTOConverterImpl implements AuthUserDTOConverter {
         authUserDTO.setEmail( authUserBO.getEmail() );
         authUserDTO.setPhone( authUserBO.getPhone() );
         authUserDTO.setPassword( authUserBO.getPassword() );
+        authUserDTO.setNewPassword( authUserBO.getNewPassword() );
         authUserDTO.setSex( authUserBO.getSex() );
         authUserDTO.setAvatar( authUserBO.getAvatar() );
         authUserDTO.setStatus( authUserBO.getStatus() );

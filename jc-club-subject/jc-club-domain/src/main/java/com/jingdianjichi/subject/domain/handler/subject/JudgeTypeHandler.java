@@ -1,5 +1,6 @@
 package com.jingdianjichi.subject.domain.handler.subject;
 
+import com.google.common.base.Preconditions;
 import com.jingdianjichi.subject.common.enums.IsDeletedFlagEnum;
 import com.jingdianjichi.subject.common.enums.SubjectInfoTypeEnum;
 import com.jingdianjichi.subject.common.util.LoginUtil;
@@ -45,11 +46,8 @@ public class JudgeTypeHandler implements SubjectTypeHandler{
     @Override
     public void add(SubjectInfoBO subjectInfoBO) {
         String key = redisUtil.buildKey(ROLE_PREFIX, LoginUtil.getLoginId());
-        System.out.println("*********************************" + key + "***********************");
-
         Long roleId = Long.valueOf(redisUtil.get(key));
-        System.out.println("*********************************" + roleId + "***********************");
-
+        Preconditions.checkNotNull(roleId);
         int isDeleted = roleId.equals(ADMIN) ? IsDeletedFlagEnum.UN_DELETED.getCode() : IsDeletedFlagEnum.UNDER_REVIEW.getCode();
 
         //判断题目的插入

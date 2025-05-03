@@ -37,5 +37,9 @@ public interface AuthUserDomainService {
     List<AuthUserBO> listUserInfoByIds(List<String> ids);
 
     Long getRoleIdByUserId(String userId);
+
+    SaTokenInfo login(AuthUserBO authUserBO);
+
+    Boolean updatePassword(AuthUserBO authUserBO);
 }
 

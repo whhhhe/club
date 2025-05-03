@@ -2,6 +2,9 @@ package com.jingdianjichi.subject.infra.basic.service;
 
 import com.jingdianjichi.subject.infra.basic.entity.SubjectInfo;
 
+import com.jingdianjichi.subject.infra.basic.entity.SubjectJobDifficult;
+import com.jingdianjichi.subject.infra.basic.entity.SubjectJobLabel;
+
 import java.util.List;
 
 /**
@@ -54,4 +57,7 @@ public interface SubjectInfoService {
 
     List<SubjectInfo> queryByIdList(List<Long> list);
 
+    List<SubjectJobLabel> setTag();
+
+    List<SubjectJobDifficult> setDiff();
 }

@@ -1,14 +1,12 @@
 package com.jingdianjichi.subject.domain.redis;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ScanOptions;
-import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +25,9 @@ public class RedisUtil {
 
     @Resource
     private RedisTemplate redisTemplate;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     private static final String CACHE_KEY_SEPARATOR = ".";
 
@@ -123,8 +124,9 @@ public class RedisUtil {
         return (Integer) redisTemplate.opsForValue().get(key);
     }
 
-    public void increment(String key, Integer count) {
-        redisTemplate.opsForValue().increment(key, count);
+    public void increment(String key, Long count) {
+//        System.out.println(stringRedisTemplate.getValueSerializer());
+        stringRedisTemplate.opsForValue().increment(key, count);
     }
 
     public Map<Object, Object> getHashAndDelete(String key) {
@@ -150,7 +152,7 @@ public class RedisUtil {
     /**
      * SET 批量添加元素
      */
-    public Long saddAll(String key, Set<Object> values) {
+    public Long saddAll(String key, Set<Long> values) {
         return redisTemplate.opsForSet().add(key, values.toArray());
     }
 

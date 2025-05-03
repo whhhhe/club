@@ -11,8 +11,8 @@ public class InterviewThreadPoolConfig {
     @Bean(name = "interviewExecutor")
     public ExecutorService interviewExecutor() {
         return new ThreadPoolExecutor(
-                5,                      // corePoolSize
-                10,                      // maximumPoolSize
+                10,                      // corePoolSize
+                20,                      // maximumPoolSize
                 60L, TimeUnit.SECONDS, // keepAliveTime
                 new LinkedBlockingQueue<>(100), // 阻塞队列
                 new ThreadFactory() {

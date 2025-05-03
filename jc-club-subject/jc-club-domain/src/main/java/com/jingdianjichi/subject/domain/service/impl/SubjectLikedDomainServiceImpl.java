@@ -64,6 +64,7 @@ public class SubjectLikedDomainServiceImpl implements SubjectLikedDomainService 
         Long subjectId = subjectLikedBO.getSubjectId();
         String likeUserId = subjectLikedBO.getLikeUserId();
         Integer status = subjectLikedBO.getStatus();
+        log.info("需要{}", status == 1 ? "点赞" : "取消点赞");
 //        String hashKey = buildSubjectLikedKey(subjectId.toString(), likeUserId);
 //        redisUtil.putHash(SUBJECT_LIKED_KEY, hashKey, status);
 
@@ -73,44 +74,47 @@ public class SubjectLikedDomainServiceImpl implements SubjectLikedDomainService 
         subjectLikedMessage.setStatus(status);
         rocketMQTemplate.convertAndSend("subject-liked", JSON.toJSONString(subjectLikedMessage));
 
-
-
         String detailKey = SUBJECT_LIKED_DETAIL_KEY + "." + subjectId + "." + likeUserId;
         String countKey = SUBJECT_LIKED_COUNT_KEY + "." + subjectId;
         if (SubjectLikedStatusEnum.LIKED.getCode() == status) {
-            redisUtil.increment(countKey, 1);
+            redisUtil.increment(countKey, 1L);
             redisUtil.set(detailKey, "1");
         } else {
             Integer count = redisUtil.getInt(countKey);
             if (Objects.isNull(count) || count <= 0) {
                 return;
             }
-            redisUtil.increment(countKey, -1);
+            redisUtil.increment(countKey, -1L);
             redisUtil.del(detailKey);
         }
     }
 
     @Override
     public Boolean isLiked(Long subjectId, String userId) {
-        SubjectLiked subjectLiked = new SubjectLiked();
-        subjectLiked.setLikeUserId(userId);
-        subjectLiked.setSubjectId(subjectId);
-        subjectLiked.setStatus(SubjectLikedStatusEnum.LIKED.code);
-        SubjectLiked res = subjectLikedService.queryByCondition(subjectLiked);
-        if(res != null) return Boolean.TRUE;
-        return Boolean.FALSE;
+        String detailKey = redisUtil.buildKey(SUBJECT_LIKED_DETAIL_KEY, String.valueOf(subjectId), userId);
+        String result = redisUtil.get(detailKey);
+        if(result != null) return Boolean.TRUE;
+        else {
+            SubjectLiked subjectLiked = new SubjectLiked();
+            subjectLiked.setLikeUserId(userId);
+            subjectLiked.setSubjectId(subjectId);
+            subjectLiked.setStatus(SubjectLikedStatusEnum.LIKED.code);
+            SubjectLiked res = subjectLikedService.queryByCondition(subjectLiked);
+            if (res != null) return Boolean.TRUE;
+            return Boolean.FALSE;
+        }
 
     }
 
     @Override
     public Integer getLikedCount(Long subjectId) {
-        String key = redisUtil.buildKey( SUBJECT_LIKED_COUNT_KEY , String.valueOf(subjectId));
+        String key = redisUtil.buildKey(SUBJECT_LIKED_COUNT_KEY , String.valueOf(subjectId));
         String s = redisUtil.get(key);
         if(s != null) {
             return Integer.parseInt(s);
         }
         Integer count = subjectLikedService.selectLikedCount(subjectId);
-        redisUtil.set(key, String.valueOf(count));
+        redisUtil.increment(key, Long.valueOf(count));
         return count;
     }
 

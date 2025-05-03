@@ -75,8 +75,6 @@ public class SubjectInfoDomainServiceImpl implements SubjectInfoDomainService {
         if (log.isInfoEnabled()) {
             log.info("SubjectInfoDomainServiceImpl.add.bo:{}", JSON.toJSONString(subjectInfoBO));
         }
-
-
         SubjectInfo subjectInfo = SubjectInfoConverter.INSTANCE.convertBoToInfo(subjectInfoBO);
         String userId = LoginUtil.getLoginId();
         log.info("userId{}************************", userId);
@@ -242,6 +240,26 @@ public class SubjectInfoDomainServiceImpl implements SubjectInfoDomainService {
         SubjectTypeHandler handler = subjectTypeHandlerFactory.getHandler(subjectType);
         Long count = handler.count();
         return Math.toIntExact(count);
+    }
+
+    @Override
+    public void setDiffAndTag() {
+        System.out.println("000000000000000000");
+        List<SubjectJobLabel> subjectJobEntities = subjectInfoService.setTag();
+        List<SubjectJobDifficult> subjectJobDifficulties = subjectInfoService.setDiff();
+        System.out.println("111111111111111111");
+        log.info("labelIdsAndSubjectIds{}", subjectJobEntities);
+        log.info("subjectDifficultiesAndSubjectIds{}", subjectJobDifficulties);
+        for(SubjectJobLabel subjectJobEntity : subjectJobEntities){
+            subjectJobEntity.convertStrToList();
+            String tagKey = redisUtil.buildKey(TAG_SET_PREFIX, String.valueOf(subjectJobEntity.getLabelId()));
+            redisUtil.saddAll(tagKey, subjectJobEntity.getSubjectIdSet());
+        }
+        for(SubjectJobDifficult subjectJobDifficult : subjectJobDifficulties){
+            subjectJobDifficult.convertStrToList();
+            String diffKey = redisUtil.buildKey(DIFF_SET_PREFIX, String.valueOf(subjectJobDifficult.getSubjectDifficult()));
+            redisUtil.saddAll(diffKey, subjectJobDifficult.getSubjectIdSet());
+        }
     }
 
     private void putSubjectInEs(SubjectInfoBO subjectInfoBO){

@@ -24,6 +24,7 @@ public class AuthUserBO implements Serializable {
     private String phone;
 
     private String password;
+    private String newPassword;
 
     private Integer sex;
 

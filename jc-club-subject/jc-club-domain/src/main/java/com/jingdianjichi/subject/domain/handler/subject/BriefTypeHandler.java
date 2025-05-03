@@ -1,5 +1,6 @@
 package com.jingdianjichi.subject.domain.handler.subject;
 
+import com.google.common.base.Preconditions;
 import com.jingdianjichi.subject.common.enums.IsDeletedFlagEnum;
 import com.jingdianjichi.subject.common.enums.SubjectInfoTypeEnum;
 import com.jingdianjichi.subject.common.util.LoginUtil;
@@ -45,6 +46,7 @@ public class BriefTypeHandler implements SubjectTypeHandler{
     @Override
     public void add(SubjectInfoBO subjectInfoBO) {
         Long roleId = Long.valueOf(redisUtil.get(redisUtil.buildKey(ROLE_PREFIX, LoginUtil.getLoginId())));
+        Preconditions.checkNotNull(roleId);
         int isDeleted = roleId.equals(ADMIN) ? IsDeletedFlagEnum.UN_DELETED.getCode() : IsDeletedFlagEnum.UNDER_REVIEW.getCode();
 
 //        System.out.println("subjectInfoBO:" + subjectInfoBO);

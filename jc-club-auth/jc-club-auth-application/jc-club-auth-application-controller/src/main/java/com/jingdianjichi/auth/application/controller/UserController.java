@@ -65,6 +65,23 @@ public class UserController {
         }
     }
 
+    @PostMapping("/updatePassword")
+    public Result<Boolean> updatePassword(@RequestBody AuthUserDTO authUserDTO) {
+        log.info("{}",  authUserDTO);
+        try {
+            if (log.isInfoEnabled()) {
+                log.info("UserController.updatePassword.dto:{}", JSON.toJSONString(authUserDTO));
+            }
+            checkUserInfo(authUserDTO);
+            AuthUserBO authUserBO = AuthUserDTOConverter.INSTANCE.convertDTOToBO(authUserDTO);
+            return Result.ok(authUserDomainService.updatePassword(authUserBO));
+        } catch (Exception e) {
+            log.error("UserController.updatePassword.error:{}", e.getMessage(), e);
+            return Result.fail("更新用户密码失败");
+        }
+    }
+
+
     /**
      * 获取用户信息
      */
@@ -166,6 +183,18 @@ public class UserController {
         } catch (Exception e) {
             log.error("UserController.doLogin.error:{}", e.getMessage(), e);
             return Result.fail("用户登录失败");
+        }
+    }
+
+    @RequestMapping("login")
+    public Result<SaTokenInfo> login(@RequestBody AuthUserDTO authUserDTO) {
+        try {
+            Preconditions.checkNotNull(authUserDTO, "AuthUserDTO为空!");
+            AuthUserBO authUserBO = AuthUserDTOConverter.INSTANCE.convertDTOToBO(authUserDTO);
+            return Result.ok(authUserDomainService.login(authUserBO));
+        } catch (Exception e) {
+            log.error("UserController.login.error:{}", e.getMessage(), e);
+            return Result.fail("用户账号密码登录失败");
         }
     }
 

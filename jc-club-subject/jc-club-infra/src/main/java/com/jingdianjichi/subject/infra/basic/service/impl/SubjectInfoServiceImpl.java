@@ -1,6 +1,8 @@
 package com.jingdianjichi.subject.infra.basic.service.impl;
 
 import com.jingdianjichi.subject.infra.basic.entity.SubjectInfo;
+import com.jingdianjichi.subject.infra.basic.entity.SubjectJobDifficult;
+import com.jingdianjichi.subject.infra.basic.entity.SubjectJobLabel;
 import com.jingdianjichi.subject.infra.basic.mapper.SubjectInfoDao;
 import com.jingdianjichi.subject.infra.basic.service.SubjectInfoService;
 import org.springframework.stereotype.Service;
@@ -88,6 +90,16 @@ public class SubjectInfoServiceImpl implements SubjectInfoService {
     @Override
     public List<SubjectInfo> queryByIdList(List<Long> list) {
         return this.subjectInfoDao.queryByIdList(list);
+    }
+
+    @Override
+    public List<SubjectJobLabel> setTag() {
+        return this.subjectInfoDao.getSubjectIdsByLabelGrouped();
+    }
+
+    @Override
+    public List<SubjectJobDifficult> setDiff() {
+        return this.subjectInfoDao.getSubjectIdsByDifficultGrouped();
     }
 
 }

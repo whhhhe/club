@@ -403,5 +403,37 @@
         where id = #{id}
     </delete>
 
+
+    <!-- SubjectMapper.xml -->
+    <select id="getSubjectIdsByLabelGrouped" resultType="com.jingdianjichi.subject.infra.basic.entity.SubjectJobLabel">
+        SELECT
+            sm.label_id AS labelId,
+            GROUP_CONCAT(sm.subject_id) AS subjectIdList
+        FROM
+            subject_mapping sm
+                JOIN
+            subject_info si ON sm.subject_id = si.id
+        WHERE
+            si.subject_type IN (1, 2, 3)
+          AND sm.is_deleted = 0
+          AND si.is_deleted = 0
+        GROUP BY
+            sm.label_id;
+
+    </select>
+    <select id="getSubjectIdsByDifficultGrouped"
+            resultType="com.jingdianjichi.subject.infra.basic.entity.SubjectJobDifficult">
+        SELECT subject_difficult as subjectDifficult,
+               GROUP_CONCAT(id) AS subjectIdList
+        FROM
+            subject_info
+        WHERE
+            subject_type IN (1, 2, 3)
+        AND
+            is_deleted = 0
+        GROUP BY
+            subject_difficult
+    </select>
+
 </mapper>
 

@@ -1,6 +1,9 @@
 package com.jingdianjichi.subject.infra.basic.mapper;
 
 import com.jingdianjichi.subject.infra.basic.entity.SubjectInfo;
+import com.jingdianjichi.subject.infra.basic.entity.SubjectJobDifficult;
+
+import com.jingdianjichi.subject.infra.basic.entity.SubjectJobLabel;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -106,5 +109,11 @@ public interface SubjectInfoDao {
 
 
     List<SubjectInfo> getMyCommit(SubjectInfo subjectInfo);
+
+
+    List<SubjectJobLabel> getSubjectIdsByLabelGrouped();
+
+
+    List<SubjectJobDifficult> getSubjectIdsByDifficultGrouped();
 }
 
